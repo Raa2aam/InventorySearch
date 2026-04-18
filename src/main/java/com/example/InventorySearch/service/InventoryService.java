@@ -1,7 +1,6 @@
 package com.example.InventorySearch.service;
 
 
-
 import com.example.InventorySearch.dto.*;
 import com.example.InventorySearch.model.Inventory;
 import com.example.InventorySearch.repository.InventoryRepository;
@@ -11,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;          // Lombok: gives us a logger
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 
 @Service                  // Tells Spring "this is a service bean, manage it"
@@ -28,6 +28,32 @@ public class InventoryService {
             int size,
             String sortBy,
             String sortDir) {
+
+        // Validate price range makes sense
+        if (request.getMinPrice() != null && request.getMaxPrice() != null) {
+            if (request.getMinPrice().compareTo(request.getMaxPrice()) > 0) {
+                throw new IllegalArgumentException(
+                        "minPrice cannot be greater than maxPrice"
+                );
+            }
+        }
+
+        // Validate stock range makes sense
+        if (request.getMinStock() != null && request.getMaxStock() != null) {
+            if (request.getMinStock() > request.getMaxStock()) {
+                throw new IllegalArgumentException(
+                        "minStock cannot be greater than maxStock"
+                );
+            }
+        }
+
+        // Validate page and size
+        if (page < 0) {
+            throw new IllegalArgumentException("Page number cannot be negative");
+        }
+        if (size <= 0 || size > 100) {
+            throw new IllegalArgumentException("Page size must be between 1 and 100");
+        }
 
         log.info("Searching inventory with filters: {}", request);
         // Good logging — shows judges you think about observability
